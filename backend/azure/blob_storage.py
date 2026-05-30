@@ -6,22 +6,33 @@ from azure.storage.blob import BlobServiceClient
 
 load_dotenv()
 
-connection_string = os.getenv(
-    "AZURE_STORAGE_CONNECTION_STRING"
-)
+container_name = os.getenv("AZURE_STORAGE_CONTAINER", "retail-data")
 
-container_name = "retail-data"
+_blob_service_client = None
 
-blob_service_client = BlobServiceClient.from_connection_string(
-    connection_string
-)
+
+def get_blob_service_client():
+    global _blob_service_client
+
+    if _blob_service_client is None:
+        connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        if not connection_string:
+            raise RuntimeError(
+                "AZURE_STORAGE_CONNECTION_STRING environment variable is not configured"
+            )
+
+        _blob_service_client = BlobServiceClient.from_connection_string(
+            connection_string
+        )
+
+    return _blob_service_client
 
 # Upload file
 def upload_file(file_path):
 
     blob_name = os.path.basename(file_path)
 
-    blob_client = blob_service_client.get_blob_client(
+    blob_client = get_blob_service_client().get_blob_client(
         container=container_name,
         blob=blob_name
     )
@@ -38,7 +49,7 @@ def upload_file(file_path):
 # Download all PDFs
 def download_all_pdfs():
 
-    container_client = blob_service_client.get_container_client(
+    container_client = get_blob_service_client().get_container_client(
         container_name
     )
 

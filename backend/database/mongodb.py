@@ -1,9 +1,31 @@
+import os
+
+from dotenv import load_dotenv
 from pymongo import MongoClient
 
-MONGO_URI = "mongodb+srv://vanshikagangwar98_db_user:g9i3TQpBir6LErA9@cluster1.jhamd2u.mongodb.net/?appName=Cluster1"
+load_dotenv()
 
-client = MongoClient(MONGO_URI)
 
-db = client["smart_retail_db"]
+class SalesCollectionProxy:
+    def __init__(self):
+        self._collection = None
 
-sales_collection = db["sales"]
+    def _get_collection(self):
+        if self._collection is None:
+            mongo_uri = os.getenv("MONGO_URI")
+            if not mongo_uri:
+                raise RuntimeError("MONGO_URI environment variable is not configured")
+
+            db_name = os.getenv("MONGO_DB_NAME", "smart_retail_db")
+            collection_name = os.getenv("MONGO_COLLECTION", "sales")
+
+            client = MongoClient(mongo_uri)
+            self._collection = client[db_name][collection_name]
+
+        return self._collection
+
+    def __getattr__(self, name):
+        return getattr(self._get_collection(), name)
+
+
+sales_collection = SalesCollectionProxy()

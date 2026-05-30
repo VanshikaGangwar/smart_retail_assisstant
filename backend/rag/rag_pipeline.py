@@ -1,43 +1,65 @@
 import os
 
 from dotenv import load_dotenv
-
 from openai import AzureOpenAI
-
 from langchain_huggingface import HuggingFaceEmbeddings
-
 from langchain_community.vectorstores import FAISS
-
-# LOAD ENV VARIABLES
 
 load_dotenv()
 
-FOUNDARY_API_KEY = os.getenv("FOUNDARY_API_KEY")
-FOUNDARY_ENDPOINT = os.getenv("FOUNDARY_ENDPOINT")
+_client = None
+_embeddings = None
+_vectorstore = None
 
-# AZURE OPENAI CLIENT
 
-client = AzureOpenAI(
-    api_key=FOUNDARY_API_KEY,
-    api_version="2024-05-01-preview",
-    azure_endpoint=FOUNDARY_ENDPOINT
-)
+def get_openai_client():
+    global _client
 
-# LOAD EMBEDDINGS
+    if _client is None:
+        api_key = os.getenv("FOUNDARY_API_KEY")
+        endpoint = os.getenv("FOUNDARY_ENDPOINT")
+        api_version = os.getenv("FOUNDARY_API_VERSION", "2024-05-01-preview")
 
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
+        if not api_key or not endpoint:
+            raise RuntimeError(
+                "FOUNDARY_API_KEY and FOUNDARY_ENDPOINT must be configured"
+            )
 
-# LOAD FAISS VECTOR DATABASE
+        _client = AzureOpenAI(
+            api_key=api_key,
+            api_version=api_version,
+            azure_endpoint=endpoint
+        )
 
-vectorstore = FAISS.load_local(
-    "faiss_index",
-    embeddings,
-    allow_dangerous_deserialization=True
-)
+    return _client
 
-print("FAISS Vector DB Loaded")
+
+def get_embeddings():
+    global _embeddings
+
+    if _embeddings is None:
+        _embeddings = HuggingFaceEmbeddings(
+            model_name=os.getenv(
+                "EMBEDDING_MODEL",
+                "sentence-transformers/all-MiniLM-L6-v2"
+            )
+        )
+
+    return _embeddings
+
+
+def get_vectorstore():
+    global _vectorstore
+
+    if _vectorstore is None:
+        _vectorstore = FAISS.load_local(
+            "faiss_index",
+            get_embeddings(),
+            allow_dangerous_deserialization=True
+        )
+        print("FAISS Vector DB Loaded")
+
+    return _vectorstore
 
 
 def ask_rag(question):
@@ -45,7 +67,7 @@ def ask_rag(question):
     try:
         # STEP 1: Retrieve Relevant Chunks
         
-        docs = vectorstore.similarity_search(
+        docs = get_vectorstore().similarity_search(
             question,
             k=3
         )
@@ -79,8 +101,8 @@ def ask_rag(question):
 
         # STEP 4: Azure Foundry Response
 
-        response = client.chat.completions.create(
-            model="gpt-oss-120b",
+        response = get_openai_client().chat.completions.create(
+            model=os.getenv("FOUNDARY_MODEL", "gpt-oss-120b"),
             messages=[
                 {
                     "role": "system",

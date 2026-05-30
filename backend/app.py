@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 import logging
 
 from backend.routes.upload import router as upload_router
@@ -34,6 +34,11 @@ app.include_router(sentiment_router)
 app.include_router(blob_router)
 app.include_router(export_router)
 app.include_router(anomaly_check_router)
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -137,7 +142,10 @@ async def global_exception_handler(request: Request, exc: Exception):
 
     logger.error(f"Error occurred: {str(exc)}")
 
-    return {
-        "status": "error",
-        "message": str(exc)
-    }
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "error",
+            "message": str(exc)
+        }
+    )
