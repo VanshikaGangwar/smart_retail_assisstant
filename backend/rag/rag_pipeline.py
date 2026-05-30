@@ -8,18 +8,14 @@ from langchain_huggingface import HuggingFaceEmbeddings
 
 from langchain_community.vectorstores import FAISS
 
-# ---------------------------------------------------
 # LOAD ENV VARIABLES
-# ---------------------------------------------------
 
 load_dotenv()
 
 FOUNDARY_API_KEY = os.getenv("FOUNDARY_API_KEY")
 FOUNDARY_ENDPOINT = os.getenv("FOUNDARY_ENDPOINT")
 
-# ---------------------------------------------------
 # AZURE OPENAI CLIENT
-# ---------------------------------------------------
 
 client = AzureOpenAI(
     api_key=FOUNDARY_API_KEY,
@@ -27,17 +23,13 @@ client = AzureOpenAI(
     azure_endpoint=FOUNDARY_ENDPOINT
 )
 
-# ---------------------------------------------------
 # LOAD EMBEDDINGS
-# ---------------------------------------------------
 
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
-# ---------------------------------------------------
 # LOAD FAISS VECTOR DATABASE
-# ---------------------------------------------------
 
 vectorstore = FAISS.load_local(
     "faiss_index",
@@ -47,27 +39,19 @@ vectorstore = FAISS.load_local(
 
 print("FAISS Vector DB Loaded")
 
-# ---------------------------------------------------
-# MAIN RAG FUNCTION
-# ---------------------------------------------------
 
 def ask_rag(question):
 
     try:
-
-        # -----------------------------------------
         # STEP 1: Retrieve Relevant Chunks
-        # -----------------------------------------
-
+        
         docs = vectorstore.similarity_search(
             question,
             k=3
         )
 
-        # -----------------------------------------
         # STEP 2: Build Context
-        # -----------------------------------------
-
+        
         context = "\n\n".join(
             [doc.page_content for doc in docs]
         )
@@ -75,9 +59,7 @@ def ask_rag(question):
         print("Retrieved Context:")
         print(context)
 
-        # -----------------------------------------
         # STEP 3: Prompt
-        # -----------------------------------------
 
         prompt = f"""
         You are a Smart Retail Assistant.
@@ -95,9 +77,7 @@ def ask_rag(question):
         {question}
         """
 
-        # -----------------------------------------
         # STEP 4: Azure Foundry Response
-        # -----------------------------------------
 
         response = client.chat.completions.create(
             model="gpt-oss-120b",

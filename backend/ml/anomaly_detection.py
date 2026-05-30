@@ -49,3 +49,18 @@ def get_anomalies():
     ]
 
     return results.to_dict(orient='records')
+
+def check_single_sale(weekly_sales: float):
+
+    # Create dataframe like training
+    data = pd.DataFrame([{
+        "Weekly_Sales": weekly_sales
+    }])
+
+    # Use SAME trained model
+    prediction = model.predict(data)[0]
+
+    if prediction == -1:
+        return "Anomaly"
+    else:
+        return "Normal"

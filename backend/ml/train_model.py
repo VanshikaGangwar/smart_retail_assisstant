@@ -1,29 +1,30 @@
 import pandas as pd
 import numpy as np
 import pickle
+import os
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
 
-# ==============================
-# LOAD DATASET
-# ==============================
+
 
 # Read CSV file
-# Make sure sales.csv is inside data/ folder
 
-df = pd.read_csv("data/sales.csv")
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+file_path = os.path.join(BASE_DIR, "data", "sales.csv")
+
+print("Reading from:", file_path)
+
+df = pd.read_csv(file_path)
 
 print("Dataset Loaded Successfully")
 print(df.head())
 
-# ==============================
 # DATA CLEANING
-# ==============================
-
 # Convert Date column
-# Walmart dataset format is DD-MM-YYYY
+
 
 df['Date'] = pd.to_datetime(
     df['Date'],
@@ -43,10 +44,7 @@ df.drop_duplicates(inplace=True)
 
 df.dropna(inplace=True)
 
-# ==============================
 # FEATURE ENGINEERING
-# ==============================
-
 # Extract date features
 
 df['Year'] = df['Date'].dt.year
@@ -54,9 +52,7 @@ df['Month'] = df['Date'].dt.month
 df['Day'] = df['Date'].dt.day
 df['Week'] = df['Date'].dt.isocalendar().week.astype(int)
 
-# ==============================
 # REMOVE OUTLIERS
-# ==============================
 
 # Remove extreme sales values
 # Helps reduce MAE significantly
@@ -77,10 +73,6 @@ df = df[
 
 print("Outliers Removed")
 
-# ==============================
-# FEATURES AND TARGET
-# ==============================
-
 # Important retail forecasting features
 
 features = [
@@ -99,9 +91,7 @@ features = [
 X = df[features]
 y = df['Weekly_Sales']
 
-# ==============================
 # TRAIN TEST SPLIT
-# ==============================
 
 X_train, X_test, y_train, y_test = train_test_split(
     X,
@@ -110,9 +100,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     random_state=42
 )
 
-# ==============================
 # RANDOM FOREST MODEL
-# ==============================
 
 model = RandomForestRegressor(
     n_estimators=300,
@@ -123,9 +111,7 @@ model = RandomForestRegressor(
     n_jobs=-1
 )
 
-# ==============================
 # TRAIN MODEL
-# ==============================
 
 print("Training Model...")
 
@@ -133,15 +119,11 @@ model.fit(X_train, y_train)
 
 print("Model Training Completed")
 
-# ==============================
 # PREDICTIONS
-# ==============================
 
 predictions = model.predict(X_test)
 
-# ==============================
 # EVALUATION
-# ==============================
 
 mae = mean_absolute_error(y_test, predictions)
 r2 = r2_score(y_test, predictions)
@@ -150,12 +132,15 @@ print("\n===== MODEL EVALUATION =====")
 print(f"Mean Absolute Error (MAE): {mae:.2f}")
 print(f"R2 Score: {r2:.4f}")
 
-# ==============================
 # SAVE MODEL
-# ==============================
 
-with open("backend/saved_models/forecast_model.pkl", "wb") as f:
+model_path = os.path.join(BASE_DIR, "backend", "saved_models", "forecast_model.pkl")
+
+# Create folder if not exists
+os.makedirs(os.path.dirname(model_path), exist_ok=True)
+
+with open(model_path, "wb") as f:
     pickle.dump(model, f)
 
 print("\nModel Saved Successfully")
-print("Location: backend/saved_models/forecast_model.pkl")
+print("Location:", model_path)

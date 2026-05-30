@@ -1,20 +1,35 @@
 from fastapi import APIRouter
-
 import pandas as pd
+import os
 
 router = APIRouter()
 
 @router.get("/export-sales-data")
-
 def export_sales_data():
 
-    df = pd.read_csv("data/sales.csv")
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-    export_path = "data/powerbi_sales.csv"
+    input_path = os.path.join(BASE_DIR, "data", "sales.csv")
+    output_path = os.path.join(BASE_DIR, "data", "powerbi_sales.csv")
 
-    df.to_csv(export_path, index=False)
+    df = pd.read_csv(input_path)
+
+    # DATA CLEANING
+    df.dropna(inplace=True)
+    df.drop_duplicates(inplace=True)
+
+    # FEATURE ENGINEERING
+    df['Date'] = pd.to_datetime(df['Date'], dayfirst=True)
+
+    df['Year'] = df['Date'].dt.year
+    df['Month'] = df['Date'].dt.month
+    df['Week'] = df['Date'].dt.isocalendar().week.astype(int)
+
+    # SAVE CLEAN DATA
+    df.to_csv(output_path, index=False)
 
     return {
-        "message": "Data exported successfully",
-        "file": export_path
+        "message": "Data cleaned & exported successfully",
+        "file": output_path,
+        "rows": len(df)
     }

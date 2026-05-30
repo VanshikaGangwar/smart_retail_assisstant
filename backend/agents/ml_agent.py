@@ -3,9 +3,7 @@ def ml_agent(question):
     # normalize input properly
     question = question.lower().strip()
 
-    # -----------------------------
     # MODEL INFO
-    # -----------------------------
     if "model" in question or "algorithm" in question:
 
         return """
@@ -15,9 +13,7 @@ Machine Learning Models Used:
 2. Isolation Forest → Anomaly Detection
 """
 
-    # -----------------------------
     # FEATURE ENGINEERING
-    # -----------------------------
     elif "feature" in question or "engineering" in question:
 
         return """
@@ -32,9 +28,7 @@ Feature Engineering includes:
 It improves model accuracy and stability.
 """
 
-    # -----------------------------
     # PREDICTION
-    # -----------------------------
     elif "predict" in question or "forecast" in question:
 
         return """
@@ -48,9 +42,7 @@ It uses:
 - Unemployment
 """
 
-    # -----------------------------
     # ANOMALY DETECTION
-    # -----------------------------
     elif "anomaly" in question or "outlier" in question:
 
         return """
@@ -61,9 +53,7 @@ Isolation Forest detects abnormal patterns like:
 - Fraud-like behavior
 """
 
-    # -----------------------------
     # DEFAULT
-    # -----------------------------
     else:
 
         return """

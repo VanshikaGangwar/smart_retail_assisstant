@@ -7,10 +7,8 @@ def analytics_agent(question):
 
     question = question.lower()
 
-    # ----------------------------------------
     # TOTAL SALES
-    # ----------------------------------------
-
+    
     if "total sales" in question:
 
         total_sales = df['Weekly_Sales'].sum()
@@ -19,9 +17,7 @@ def analytics_agent(question):
 Total Sales: {total_sales:.2f}
 """
 
-    # ----------------------------------------
     # AVERAGE SALES
-    # ----------------------------------------
 
     elif "average weekly sales" in question:
 
@@ -31,9 +27,7 @@ Total Sales: {total_sales:.2f}
 Average Weekly Sales: {avg_sales:.2f}
 """
 
-    # ----------------------------------------
     # BEST STORE
-    # ----------------------------------------
 
     elif (
         "highest weekly sales" in question
@@ -58,9 +52,7 @@ Best Performing Store: {top_store}
 Total Sales: {top_sales:.2f}
 """
 
-    # ----------------------------------------
     # TOP 5 STORES
-    # ----------------------------------------
 
     elif "top 5 stores" in question:
 
@@ -82,9 +74,7 @@ Total Sales: {top_sales:.2f}
 
         return response
 
-    # ----------------------------------------
     # LOWEST SALES STORE
-    # ----------------------------------------
 
     elif "lowest weekly sales" in question:
 
@@ -106,9 +96,7 @@ Lowest Performing Store: {low_store}
 Total Sales: {low_sales:.2f}
 """
 
-    # ----------------------------------------
     # HOLIDAY ANALYSIS
-    # ----------------------------------------
 
     elif "holiday" in question:
 
@@ -130,9 +118,7 @@ Average Holiday Sales: {holiday_sales:.2f}
 Average Non-Holiday Sales: {non_holiday_sales:.2f}
 """
 
-    # ----------------------------------------
     # SALES TREND
-    # ----------------------------------------
 
     elif "sales trend" in question:
 
@@ -153,10 +139,8 @@ Average Non-Holiday Sales: {non_holiday_sales:.2f}
 
         return response
 
-    # ----------------------------------------
     # DEFAULT RESPONSE
-    # ----------------------------------------
-
+   
     else:
 
         return """

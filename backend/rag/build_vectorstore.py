@@ -1,51 +1,40 @@
-import os
+from backend.azure.blob_storage import (
+    download_all_pdfs
+)
 
-from backend.azure.blob_storage import download_all_pdfs
+from langchain_community.document_loaders import (
+    PyPDFLoader
+)
 
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_huggingface import (
+    HuggingFaceEmbeddings
+)
 
 from langchain_community.vectorstores import FAISS
 
-# ---------------------------------------------------
-# STEP 1: Download PDFs From Azure Blob Storage
-# ---------------------------------------------------
-
+# Download PDFs from Azure Blob
 pdf_files = download_all_pdfs()
 
-print("PDFs Downloaded From Azure Blob Storage")
-
-# ---------------------------------------------------
-# STEP 2: Load PDF Documents
-# ---------------------------------------------------
+print("PDFs Downloaded From Azure")
 
 documents = []
 
+# Load PDFs
 for file in pdf_files:
 
-    try:
+    loader = PyPDFLoader(file)
 
-        print(f"Loading PDF: {file}")
+    docs = loader.load()
 
-        loader = PyPDFLoader(file)
+    documents.extend(docs)
 
-        docs = loader.load()
+print("PDFs Loaded")
 
-        documents.extend(docs)
-
-    except Exception as e:
-
-        print(f"Error loading {file}: {e}")
-
-print(f"Total Documents Loaded: {len(documents)}")
-
-# ---------------------------------------------------
-# STEP 3: Split Documents Into Chunks
-# ---------------------------------------------------
-
+# Split documents
 splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
     chunk_overlap=200
@@ -55,36 +44,18 @@ chunks = splitter.split_documents(documents)
 
 print(f"Chunks Created: {len(chunks)}")
 
-# ---------------------------------------------------
-# STEP 4: Create Embeddings
-# ---------------------------------------------------
-
+# Embeddings
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
-print("Embeddings Model Loaded")
-
-# ---------------------------------------------------
-# STEP 5: Create FAISS Vector Store
-# ---------------------------------------------------
-
+# Create FAISS
 vectorstore = FAISS.from_documents(
-    documents=chunks,
-    embedding=embeddings
+    chunks,
+    embeddings
 )
 
+# Save vector DB
+vectorstore.save_local("faiss_index")
+
 print("FAISS Vector Store Created")
-
-# ---------------------------------------------------
-# STEP 6: Save Vector Database
-# ---------------------------------------------------
-
-FAISS_INDEX_PATH = "faiss_index"
-
-# Create folder if not exists
-os.makedirs(FAISS_INDEX_PATH, exist_ok=True)
-
-vectorstore.save_local(FAISS_INDEX_PATH)
-
-print(f"FAISS Index Saved At: {FAISS_INDEX_PATH}")
